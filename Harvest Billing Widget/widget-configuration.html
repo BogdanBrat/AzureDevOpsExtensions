@@ -33,8 +33,6 @@
         .tooltip {
             display: none;
             position: absolute;
-            background: #333;
-            color: #fff;
             padding: 5px;
             border-radius: 3px;
             font-size: 12px;
@@ -47,6 +45,16 @@
             white-space: normal;
             word-wrap: break-word;
             box-sizing: border-box;
+        }
+        body.light-theme .tooltip {
+            background: #333;
+            color: #fff; 
+            border: 1px solid #fff; 
+        }
+        body.dark-theme .tooltip {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000; 
         }
         .info-icon:hover .tooltip {
             display: block;
@@ -115,57 +123,94 @@
         .end-spacing {
             height: 30px;
         }
+        body.light-theme .widget-configuration {
+            background-color: #fff;
+            color: #000;
+        }
+        body.dark-theme .widget-configuration {
+            background-color: #333;
+            color: #fff;
+        }
+        body.dark-theme label {
+            color: #fff;
+        }
+        body.dark-theme .color-label {
+            color: #fff !important;
+        }
+        body.dark-theme .color-settings-title {
+            color: #fff !important;
+        }
+        .bold-text {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="widget-configuration">
-        <!-- Title for color settings -->
+        <!-- Billable Settings -->
+        <!-- Title for Billable settings -->
         <div class="color-settings-container">
             <div class="color-settings-title">
-                Pie Chart Sector Colors
-                <span class="info-icon">&#9432
-                    <span class="tooltip">Choose colors for the sectors of the Pie Chart. The selected colors will be reflected in the corresponding segments of the chart.</span>
-                </span>
+                <span class="bold-text"> Billable Settings </span>
             </div>
             <div class="color-setting-row">
                 <div class="color-input-wrapper">
                     <input type="color" id="billableColor" value="#852d9d" />
                 </div>
                 <label class="color-label" for="billableColor">Billable</label>
+                <span class="info-icon">&#9432
+                    <span class="tooltip">Please choose a color for the Billable sector of the Pie Chart. The selected color will be reflected in the corresponding segment of the chart.</span>
+                </span>
+            </div>
+            <!-- Billable Label Settings -->
+            <div class="form-group">
+                <label for="billableLabel">Billable Label
+                    <span class="info-icon">&#9432
+                        <span class="tooltip">Customize the label for Billable hours. Default is "Billable".</span>
+                    </span>
+                </label>
+                <input type="text" id="billableLabel" placeholder="Billable" />
+            </div>
+
+            <!-- Internal Settings -->
+            <div class="color-settings-title">
+                <span class="bold-text"> Internal Settings </span>
             </div>
             <div class="color-setting-row">
                 <div class="color-input-wrapper">
                     <input type="color" id="internalColor" value="#ec0bb7" />
                 </div>
+                <span class="info-icon">&#9432
+                    <span class="tooltip">Please choose a color for the Internal sector of the Pie Chart. The selected color will be reflected in the corresponding segment of the chart.</span>
+                </span>
                 <label class="color-label" for="internalColor">Internal</label>
             </div>
+            <!-- Internal Label Settings -->
+            <div class="form-group">
+                <label for="internalLabel">Internal Label
+                    <span class="info-icon">&#9432
+                        <span class="tooltip">Customize the label for Internal hours. Default is "Internal".</span>
+                    </span>
+                </label>
+                <input type="text" id="internalLabel" placeholder="Internal" />
+            </div>
+
+            <!-- R&D Settings -->
+            <div class="color-settings-title">
+                <span class="bold-text"> R&D Settings </span>
+            </div>
+
             <div class="color-setting-row">
                 <div class="color-input-wrapper">
                     <input type="color" id="rndColor" value="#76f5ff" />
                 </div>
+                <span class="info-icon">&#9432
+                    <span class="tooltip">Please choose a color for the R&D sector of the Pie Chart. The selected color will be reflected in the corresponding segment of the chart.</span>
+                </span>
                 <label class="color-label" for="rndColor">R&D</label>
             </div>
         </div>
-
-        <!-- Label Settings -->
-        <div class="form-group">
-            <label for="billableLabel">Billable Label
-                <span class="info-icon">&#9432
-                    <span class="tooltip">Customize the label for Billable hours. Default is "Billable".</span>
-                </span>
-            </label>
-            <input type="text" id="billableLabel" placeholder="Billable" />
-        </div>
-
-        <div class="form-group">
-            <label for="internalLabel">Internal Label
-                <span class="info-icon">&#9432
-                    <span class="tooltip">Customize the label for Internal hours. Default is "Internal".</span>
-                </span>
-            </label>
-            <input type="text" id="internalLabel" placeholder="Internal" />
-        </div>
-
+        <!-- R&D Label -->
         <div class="form-group">
             <label for="rndLabel">R&D Label
                 <span class="info-icon">&#9432
@@ -185,9 +230,77 @@
             <input type="text" id="rndFilter" placeholder="R&D" />
         </div>
 
+        <!-- Product Settings -->
+        <div class="color-settings-title">
+            <span class="bold-text"> Product Settings </span>
+        </div>
+
+        <div class="color-setting-row">
+            <div class="color-input-wrapper">
+                <input type="color" id="productSupportColor" value="#FFD700" />
+            </div>
+            <span class="info-icon">&#9432
+                <span class="tooltip">Please choose a color for the Product sector of the Pie Chart. The selected color will be reflected in the corresponding segment of the chart.</span>
+            </span>
+            <label class="color-label" for="productSupportColor">Product</label>
+        </div>
+
+        <!-- Product Label Settings -->
+        <div class="form-group">
+            <label for="productSupportLabel">Product Label
+                <span class="info-icon">&#9432
+                    <span class="tooltip">Customize the label for Product hours. Default is "Product".</span>
+                </span>
+            </label>
+            <input type="text" id="productSupportLabel" placeholder="Product" />
+        </div>
+
+        <!-- Product Support Filter Settings -->
+        <div class="form-group">
+            <label for="productSupportFilter">Product Filter</label>
+            <span class="info-icon">&#9432
+                <span class="tooltip">Filter projects by the term "PRODUCT_SUPPORT" or another keyword to categorize them under Product.</span>
+            </span>
+            <input type="text" id="productSupportFilter" placeholder="PRODUCT_SUPPORT" />
+        </div>
+
+        <!-- Unbilled Settings -->
+        <div class="color-settings-title">
+            <span class="bold-text"> Unbilled Settings </span>
+        </div>
+
+        <div class="color-setting-row">
+            <div class="color-input-wrapper">
+                <input type="color" id="unbilledColor" value="#FFA500" />
+            </div>
+            <span class="info-icon">&#9432
+                <span class="tooltip">Please choose a color for the Unbilled sector of the Pie Chart. The selected color will be reflected in the corresponding segment of the chart.</span>
+            </span>
+            <label class="color-label" for="unbilledColor">Unbilled</label>
+        </div>
+
+        <!-- Unbilled Label Settings -->
+        <div class="form-group">
+            <label for="unbilledLabel">Unbilled Label
+                <span class="info-icon">&#9432
+                    <span class="tooltip">Customize the label for Unbilled hours. Default is "Unbilled".</span>
+                </span>
+            </label>
+            <input type="text" id="unbilledLabel" placeholder="Unbilled" />
+        </div>        
+
+        <!-- Unbilled Filter Settings -->
+        <div class="form-group">
+            <label for="unbilledFilter">Unbilled Filter</label>
+            <span class="info-icon">&#9432
+                <span class="tooltip">Filter projects by the term "Unbilled" or another keyword to categorize them under Unbilled work.</span>
+            </span>
+            <input type="text" id="unbilledFilter" placeholder="Unbilled" />
+        </div>
+        
         <!-- Time Period Selection -->
         <div class="form-group">
-            <label for="timePeriod">Select Time Period
+            <label for="timePeriod"><span class="bold-text"> Select Time Period </span>
                 <span class="info-icon">&#9432
                     <span class="tooltip">Choose the time period over which to calculate and display hours.</span>
                 </span>
@@ -197,11 +310,11 @@
                 <option value="14">Last 14 Days</option>
                 <option value="30">Last 30 Days</option>
             </select>
-        </div>
+        </div>        
 
         <!-- Other settings... -->
         <div class="form-group">
-            <label for="harvestAccountId">Harvest Account ID *
+            <label for="harvestAccountId"><span class="bold-text"> Harvest Account ID * </span>
                 <span class="info-icon">&#9432
                     <span class="tooltip">Enter your Harvest Account ID, required to fetch time entries. (Log in to Harvest, go to My Profile > Settings > Security > Go to Harvest ID security settings > Developers, then create or use an existing personal token. Copy the generated Account ID).</span>
                 </span>
@@ -214,7 +327,7 @@
         </div>
 
         <div class="form-group">
-            <label for="authToken">Authorization Token *
+            <label for="authToken"><span class="bold-text"> Authorization Token * </span>
                 <span class="info-icon">&#9432
                     <span class="tooltip">Enter your Harvest Authorization Token for API access. (Log in to Harvest, go to My Profile > Settings > Security > Go to Harvest ID security settings > Developers, then create or use an existing token. Copy the generated Authorization Token).</span>
                 </span>
@@ -227,7 +340,7 @@
         </div>
 
         <div class="form-group">
-            <label for="displayMode">Display Mode
+            <label for="displayMode"><span class="bold-text"> Display Mode </span>
                 <span class="info-icon">&#9432
                     <span class="tooltip">Choose to display data as hours or percentages.</span>
                 </span>
@@ -235,6 +348,15 @@
             <select id="displayMode">
                 <option value="hours">Hours</option>
                 <option value="percentage">Percentage</option>
+            </select>
+        </div>
+
+        <!-- Theme Selection -->
+        <div class="form-group">
+            <label for="themeSelector"><span class="bold-text"> Select Theme </span></label>
+            <select id="themeSelector">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
             </select>
         </div>
 
@@ -248,6 +370,19 @@
                     const swatch = this.parentElement.querySelector('::before');
                     swatch.style.backgroundColor = this.value;
                 });
+            });
+
+            const themeSelector = document.getElementById("themeSelector");
+            const widgetConfig = document.querySelector(".widget-configuration");
+
+            themeSelector.addEventListener("change", function() {
+                if (this.value === "dark") {
+                    document.body.classList.remove("light-theme");
+                    document.body.classList.add("dark-theme");
+                } else {
+                    document.body.classList.remove("dark-theme");
+                    document.body.classList.add("light-theme");
+                }
             });
         });
     </script>

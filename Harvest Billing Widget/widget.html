@@ -6,20 +6,96 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <style>
+        body {
+        background-color: #201f1e;
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        }
+        body.light-theme canvas {
+            background-color: white;
+        }
+        body.light-theme .title {
+            color: #000000;
+        }
+        body.dark-theme {
+            background-color: #201f1e;
+            color: white;
+        }
+        body.dark-theme canvas {
+            background-color: #201f1e;
+            color: white;
+        }
+        body.dark-theme .title {
+            background-color: #201f1e;
+            color: white;
+        }
         .widget {
+            border: none;
+            overflow: hidden;
+            background-color: #201f1e;
+            width: calc(100% + 1px);
+            height: calc(100% + 1px);
             text-align: center;
             padding: 0.2em;
+            background: none;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        canvas {
+            margin-top: 1.5em;
+            border: none;
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #201f1e;
+        }
+        * {
+            box-sizing: border-box;
         }
         .title {
-            text-align: center;
+            text-align: left;
             font-size: 1.0em;
-            margin-bottom: 0.3em;
+            font-weight: normal;
+            margin-bottom: 0.0em;
+            color: #000000;
+            font-family: "Segoe UI VSS (Regular)", "Segoe UI", "-apple-system", BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";        
         }
         .chart-container {
             position: relative;
             width: 100%;
-            height: 100%;
+            height: 230px;
+            max-height: 300px;
+            margin-top: 0.0em;
         }
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;  
+            justify-content: center; 
+            align-items: center;
+            margin-top: 12px; 
+            margin-bottom: 0px;
+            padding-bottom: 0px;
+        }
+        .legend-container ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .legend-container li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .legend-container span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+            margin-left: 8px;
+        }
+        
     </style>
 </head>
 <body>
@@ -28,6 +104,7 @@
         <div class="chart-container">
             <canvas id="hoursChart"></canvas>
         </div>
+        <div id="legendContainer" class="legend-container"></div>
     </div>
     <script type="text/javascript">
         // Initialize VSS SDK
@@ -42,22 +119,66 @@
             VSS.register("HarvestHoursWidget", function () {
                 return {
                     load: function (widgetSettings) {
-                        // Parse custom settings
+
+                        // Read theme settings
                         var settings = JSON.parse(widgetSettings.customSettings.data || "{}");
+                        const selectedTheme = settings.theme || "light";
+                        console.log("Selected Theme on Load:", selectedTheme);
+
+                        // Function for applying a theme
+                        function applyTheme(theme) {
+                            const bodyElement = document.body;
+                            const widgetElement = document.querySelector(".widget");
+
+                            // Clear previous classes
+                            bodyElement.classList.remove("light-theme", "dark-theme");
+                            if (widgetElement) widgetElement.classList.remove("light-theme", "dark-theme");
+
+                            // Add classes for a new theme
+                            if (theme === "dark") {
+                                bodyElement.classList.add("dark-theme");
+                                if (widgetElement) widgetElement.classList.add("dark-theme");
+                            } else {
+                                bodyElement.classList.add("light-theme");
+                                if (widgetElement) widgetElement.classList.add("light-theme");
+                            }
+                        }
+
+                        // Apply theme
+                        applyTheme(selectedTheme);
+
+                        // Parse custom settings
                         var harvestAccountId = settings.harvestAccountId;
                         var authToken = settings.authToken;
+
+                        // Checking for necessary settings
+                        if (!harvestAccountId || !authToken) {
+                            // Show a message if data is missing
+                            var widgetContainer = document.querySelector('.widget');
+                            widgetContainer.innerHTML = `
+                                <div style="text-align: center; padding: 20px;">
+                                    <h3>Widget Not Configured</h3>
+                                    <p>Please provide your Harvest API credentials in the settings.</p>
+                                </div>
+                            `;
+                            return WidgetHelpers.WidgetStatusHelper.Success();
+                        }
+
                         var widgetTitle = widgetSettings.name || "Billable/Non-billable Hours";
                         var displayMode = settings.displayMode || "hours";
                         var filterKeyword = settings.rndFilter || "R&D"; // This controls the filter for project codes
                         var billableLabel = settings.billableLabel || "Billable";
                         var internalLabel = settings.internalLabel || "Internal";
+                        var unbilledLabel = settings.unbilledLabel || "Unbilled";
                         var rndLabel = settings.rndLabel || "R&D"; // This controls the label name on the chart
                         var timePeriod = settings.timePeriod || "7"; // Default to 7 days if not set
-
+                        var productSupportLabel = settings.productSupportLabel || "Product";
                         // Get the colors from the settings or use default values
                         var billableColor = settings.billableColor || "#852d9d";
                         var internalColor = settings.internalColor || "#ec0bb7";
                         var rndColor = settings.rndColor || "#76f5ff";
+                        var productSupportColor = settings.productSupportColor || "#FFD700";
+                        var unbilledColor = settings.unbilledColor || "#27CA12";
 
                         // Ensure necessary credentials are available
                         if (!harvestAccountId || !authToken) {
@@ -72,6 +193,8 @@
                         var billableHours = 0;
                         var nonBillableHours = 0;
                         var rAndDHours = 0;
+                        var productSupportHours = 0;
+                        var unbilledHours = 0;
 
                         // Function to calculate date range based on selected period
                         function calculateDateRange(period) {
@@ -101,9 +224,12 @@
                                 // Process each time entry
                                 data.time_entries.forEach(function (entry) {
                                     console.log("Project Code:", entry.project.code);
-                                    // Apply R&D filter to calculate R&D hours
                                     if (entry.project && entry.project.code && entry.project.code.includes(filterKeyword)) {
                                         rAndDHours += entry.hours;
+                                    } else if (entry.project && entry.project.code && entry.project.code.includes(settings.productSupportFilter || "PRODUCT_SUPPORT")) {
+                                        productSupportHours += entry.hours;
+                                    } else if (entry.task && entry.task.name && entry.task.name.includes(settings.unbilledFilter || "Unbilled")) {
+                                        unbilledHours += entry.hours;
                                     } else if (entry.billable) {
                                         billableHours += entry.hours;
                                     } else {
@@ -112,29 +238,63 @@
                                 });
 
                                 // Calculate total hours
-                                var totalHours = billableHours + nonBillableHours + rAndDHours;
+                                var totalHours = billableHours + nonBillableHours + rAndDHours + productSupportHours + unbilledHours;
+                                const textColor = selectedTheme === "dark" ? "white" : "#333";
+                                const canvasBackgroundColor = selectedTheme === "dark" ? "#201f1e" : "white";
                                 var ctx = document.getElementById('hoursChart').getContext('2d');
 
                                 // Create the chart
                                 var chart = new Chart(ctx, {
                                     type: 'doughnut',
                                     data: {
-                                        labels: [internalLabel, billableLabel, rndLabel],
-                                        datasets: [{
-                                            data: [nonBillableHours, billableHours, rAndDHours],
-                                            backgroundColor: [internalColor, billableColor, rndColor]
-                                        }]
+                                        labels: [internalLabel, billableLabel, rndLabel, productSupportLabel, unbilledLabel],
+                                            datasets: [{
+                                                data: [nonBillableHours, billableHours, rAndDHours, productSupportHours, unbilledHours],
+                                                backgroundColor: [internalColor, billableColor, rndColor, productSupportColor, unbilledColor],
+                                                borderColor: "#ffffff",
+                                                borderWidth: 1
+                                            }
+                                        ]
                                     },
                                     options: {
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
                                             legend: {
-                                                display: true,
+                                                display: false,
                                                 position: 'bottom',
-                                                onClick: null // Disable legend interaction
+                                                labels: {
+                                                    boxWidth: 12, 
+                                                    boxHeight: 12, 
+                                                    padding: 5,
+                                                    font: {
+                                                        size: 12,
+                                                        family: `"Segoe UI VSS (Regular)", "Segoe UI", "-apple-system", BlinkMacSystemFont, Roboto, "Helvetica Neue", Helvetica, Ubuntu, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`,
+                                                    },
+                                                    usePointStyle: false,
+                                                    generateLabels: function(chart) {
+                                                        return chart.data.labels.map(function(label, index) {
+                                                            const meta = chart.getDatasetMeta(0);
+                                                            const style = meta.controller.getStyle(index);
+                                                            return {
+                                                                text: label,
+                                                                fillStyle: style.backgroundColor,
+                                                                strokeStyle: "transparent",
+                                                                lineWidth: 0,
+                                                                pointStyle: "rect",
+                                                                padding: 0,
+                                                                textAlign: "start",
+                                                            };
+                                                        });
+                                                    }
+                                                }
                                             },
                                             tooltip: {
+                                                backgroundColor: 'white',
+                                                titleColor: '#333',
+                                                bodyColor: '#333',
+                                                borderColor: '#000000',
+                                                borderWidth: 0.5,
                                                 callbacks: {
                                                     label: function (context) {
                                                         let value = context.parsed;
@@ -148,44 +308,80 @@
                                                 }
                                             },
                                             datalabels: {
-                                                color: '#fff',
-                                                formatter: (value) => {
-                                                    if (displayMode === "percentage") {
-                                                        let percentage = ((value / totalHours) * 100).toFixed(1);
-                                                        return `${percentage}%`;
-                                                    } else {
-                                                        return `${value.toFixed(1)} h`;
+                                                color: "white",
+                                                formatter: (value, context) => {
+                                                    let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                                    let percentage = (value / total) * 100;
+
+                                                    // Hide the value if the condition is met
+                                                    if ((displayMode === "percentage" && percentage <= 3) || 
+                                                        (displayMode === "hours" && value <= 40)) {
+                                                        return ""; 
                                                     }
+
+                                                    // Display in the appropriate mode
+                                                    return displayMode === "percentage" ? `${percentage.toFixed(1)}%` : `${value.toFixed(1)} h`;
                                                 },
                                                 font: {
-                                                    weight: 'bold',
+                                                    weight: 'normal',
                                                     size: 14 // Default size
                                                 }
                                             }
-                                        }
+                                        },
+                                        backgroundColor: 'transparent',
                                     },
                                     plugins: [ChartDataLabels, {
                                         beforeDraw: function(chart) {
-                                            var width = chart.width,
-                                                height = chart.height,
+                                            var width = chart.chartArea.right - chart.chartArea.left,
+                                                height = chart.chartArea.bottom - chart.chartArea.top,
                                                 ctx = chart.ctx;
+                                            
+                                            const legend = chart.legend;
+                                            if (legend) {
+                                                legend.options.labels.padding = 31;
+                                            }
+                                            
                                             ctx.restore();
-                                            var fontSize = (height / 200).toFixed(2);
-                                            ctx.font = fontSize + "em sans-serif";
                                             ctx.textBaseline = "middle";
-                                            var text = totalHours.toFixed(1) + ' h',
-                                                textX = Math.round((width - ctx.measureText(text).width) / 2),
-                                                textY = height / 2 - 20;
-                                            ctx.fillText(text, textX, textY);
+                                            ctx.textAlign = "center"; // Ensure horizontal centering
+                                            ctx.fillStyle = textColor;
 
-                                            ctx.font = (fontSize / 1.5) + "em sans-serif";
-                                            var subtext = "Total Hours",
-                                                subtextX = Math.round((width - ctx.measureText(subtext).width) / 2);
-                                            ctx.fillText(subtext, subtextX, textY + 20);
+                                            var centerX = chart.chartArea.left + width / 2; // Calculate center X
+                                            var centerY = chart.chartArea.top + height / 2; // Calculate center Y
+
+                                            // Dynamically adjust font size based on chart size
+                                            var fontSize = Math.min(width, height) / 10; // 10% of the smallest dimension
+                                            ctx.font = `${fontSize}px Segoe UI`;
+
+                                            // Draw Total Hours in the center
+                                            var totalHoursText = `${totalHours.toFixed(1)} h`;
+                                            ctx.fillText(totalHoursText, centerX, centerY - fontSize * 0.3);
+
+                                            // Draw Time Period slightly below
+                                            ctx.font = `${fontSize * 0.5}px Segoe UI`; // Smaller font for time period
+                                            var timePeriodText = `Last ${timePeriod} days`;
+                                            ctx.fillText(timePeriodText, centerX, centerY + fontSize * 0.8);
+
                                             ctx.save();
                                         }
                                     }]
                                 });
+                                function generateLegend(chart) {
+                                    var legendContainer = document.getElementById('legendContainer');
+                                    legendContainer.innerHTML = '';
+
+                                    chart.data.labels.forEach((label, index) => {
+                                        var legendItem = document.createElement('li');
+                                        var colorBox = document.createElement('span');
+
+                                        colorBox.style.backgroundColor = chart.data.datasets[0].backgroundColor[index];
+
+                                        legendItem.appendChild(colorBox);
+                                        legendItem.appendChild(document.createTextNode(label));
+                                        legendContainer.appendChild(legendItem);
+                                    });
+                                }
+                                generateLegend(chart);
 
                                 // Adjust chart size based on widget size
                                 VSS.resize();
@@ -213,18 +409,19 @@
             var height = widgetContainer.clientHeight;
 
             if (size.rowSpan === 2 || size.columnSpan === 2) {
-                title.style.fontSize = "1.0em";
+                title.style.fontSize = "16px";
                 chart.options.plugins.datalabels.font.size = 12;
-                widgetContainer.style.maxHeight = "280px";
+                widgetContainer.style.maxHeight = "265px";
             } else if (size.rowSpan === 3 && size.columnSpan === 3) {
-                title.style.fontSize = "1.2em";
-                chart.options.plugins.datalabels.font.size = 16;
+                title.style.fontSize = "20px";
+                chart.options.plugins.datalabels.font.size = 16 ;
                 widgetContainer.style.maxHeight = "440px";
             } else {
-                title.style.fontSize = "1.0em";
+                title.style.fontSize = "16px";
                 chart.options.plugins.datalabels.font.size = 12;
                 widgetContainer.style.maxHeight = "320px";
             }
+            //chart.options.plugins.legend.display = false;
             chart.update();
         }
     </script>

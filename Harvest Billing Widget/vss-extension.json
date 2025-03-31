@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "HarvestWidgets",
-  "version": "1.0.121",
+  "version": "1.1.9",
   "name": "Harvest Billing Widget",
   "description": "Displays hours from Harvest, providing detailed insights into time allocation for projects. The hours are categorized into billable hours, 'R&D' (Research & Development), and Internal hours.",
   "publisher": "EirEvo-EvoLabs",
@@ -50,10 +50,7 @@
         "catalogIconUrl": "img/preview.png",
         "uri": "widget.html",
         "supportedSizes": [
-          { "rowSpan": 2, "columnSpan": 2 },
-          { "rowSpan": 2, "columnSpan": 3 },
-          { "rowSpan": 3, "columnSpan": 2 },
-          { "rowSpan": 3, "columnSpan": 3 }
+          { "rowSpan": 2, "columnSpan": 2 }
         ],
         "supportedScopes": ["project_team"]
       }
